@@ -1,4 +1,4 @@
-package lua_env
+package lua_injection
 
 import (
 	lua "github.com/yuin/gopher-lua"

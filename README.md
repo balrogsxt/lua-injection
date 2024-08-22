@@ -4,7 +4,7 @@
 
 > 调用方法
 
-```gopackage lua_env
+```gopackage lua_injection
 
 import (
 	"fmt"
