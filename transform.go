@@ -78,6 +78,10 @@ func Marshal(state *lua.LState, v any) lua.LValue {
 			return t
 		}
 		if t, has := v.(IService); has { //指针类型才进行方法解析
+			//判断IService是否是nil
+			if reflect.ValueOf(v).IsNil() {
+				return lua.LNil
+			}
 			table := state.NewTable()
 			//结构体字段
 			elem := tp.Elem()
