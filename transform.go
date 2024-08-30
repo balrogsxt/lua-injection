@@ -7,7 +7,6 @@ import (
 	"log"
 	"reflect"
 	"slices"
-	"strings"
 )
 
 // Marshal 将go变量转换成Lua变量
@@ -42,10 +41,7 @@ func Marshal(state *lua.LState, v any) lua.LValue {
 			if !field.IsExported() { //非公开的不要
 				continue
 			}
-			key := field.Name
-			if tag := field.Tag.Get("lua"); len(strings.Trim(tag, " ")) > 0 {
-				key = tag
-			}
+			key := getFieldKey(field)
 			table.RawSetString(key, Marshal(state, value.Interface()))
 		}
 		return table
