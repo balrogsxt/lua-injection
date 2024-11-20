@@ -124,9 +124,9 @@ func Unmarshal(v any) any {
 		case lua.LTNil:
 			return nil
 		case lua.LTBool:
-			return params.String()
+			return NewVar(params.String()).Bool()
 		case lua.LTNumber:
-			return params.String()
+			return NewVar(params.String()).Float64()
 		case lua.LTString:
 			return params.String()
 		case lua.LTTable:
