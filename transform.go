@@ -130,11 +130,26 @@ func Unmarshal(v any) any {
 		case lua.LTString:
 			return params.String()
 		case lua.LTTable:
-			data := map[string]interface{}{}
+			data := map[string]any{}
 			t := params.(*lua.LTable)
+			//判断如果k是有规律的自然数字1234...,则转换成数组
+			isArray := true
+			index := 1
 			t.ForEach(func(k lua.LValue, v lua.LValue) {
+				if isArray && NewVar(k.String()).Int() != index {
+					isArray = false
+				}
+				index++
 				data[k.String()] = Unmarshal(v)
 			})
+			//转换成array
+			if isArray {
+				array := make([]any, 0, len(data))
+				for _, item := range data {
+					array = append(array, item)
+				}
+				return array
+			}
 			return data
 		}
 		return params.String()

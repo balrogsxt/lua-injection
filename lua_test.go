@@ -73,3 +73,35 @@ func TestLua(t *testing.T) {
 	`))
 
 }
+
+type T1 struct {
+}
+
+func (T1) Name() string {
+	return "t1"
+}
+
+type T1Params struct {
+	Json map[string]any `lua:"json"`
+}
+
+func (T1) Params(params T1Params) {
+	fmt.Println(params)
+}
+
+func TestLua1(t *testing.T) {
+
+	state := lua.NewState()
+
+	state.SetGlobal("t1", RefService(state, T1{}))
+
+	fmt.Println(state.DoString(`
+		--调用测试
+		t1.params({
+			json = {
+				key = {"1","2","3"}
+			}
+		})
+	`))
+
+}
