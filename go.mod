@@ -1,4 +1,4 @@
-module lua-injection
+module github.com/balrogsxt/lua-injection
 
 go 1.22.1
 
