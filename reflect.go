@@ -6,7 +6,15 @@ import (
 	"reflect"
 )
 
-func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
+type Value interface {
+	any
+}
+
+func ReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
+	//如果要求接受的是any类型，那么直接返回,用于自定义解析数据
+	if t == reflect.TypeOf((*Value)(nil)).Elem() {
+		return reflect.ValueOf(v)
+	}
 	switch t.Kind() {
 	case reflect.Interface:
 		return reflect.ValueOf(Unmarshal(v))
@@ -39,7 +47,7 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 	case reflect.Bool:
 		return reflect.ValueOf(NewVar(v).Bool())
 	case reflect.Ptr:
-		ov := toReflectValue(state, t.Elem(), v)
+		ov := ReflectValue(state, t.Elem(), v)
 		nv := reflect.New(ov.Type())
 		if v == nil || reflect.TypeOf(&lua.LNilType{}) == reflect.TypeOf(v) {
 			nv.Elem().SetZero()
@@ -72,7 +80,7 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 				case reflect.Float32, reflect.Float64:
 					fv.SetFloat(NewVar(tv.String()).Float64())
 				case reflect.Struct, reflect.Slice, reflect.Map, reflect.Ptr:
-					fv.Set(toReflectValue(state, ft.Type, tv))
+					fv.Set(ReflectValue(state, ft.Type, tv))
 				case reflect.Invalid:
 					fv.SetZero()
 				default:
@@ -105,9 +113,9 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 					item := rt[j]
 					switch p.Kind() {
 					case reflect.String, reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Bool:
-						outParams = append(outParams, toReflectValue(state, p, item.String()))
+						outParams = append(outParams, ReflectValue(state, p, item.String()))
 					case reflect.Struct, reflect.Ptr, reflect.Map, reflect.Interface, reflect.Slice, reflect.Func:
-						outParams = append(outParams, toReflectValue(state, p, item))
+						outParams = append(outParams, ReflectValue(state, p, item))
 					default:
 						outParams = append(outParams, reflect.New(p).Elem())
 					}
@@ -128,7 +136,7 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 			return mapVal
 		}
 		tab.ForEach(func(key lua.LValue, val lua.LValue) {
-			mapVal.SetMapIndex(toReflectValue(state, t.Key(), key), toReflectValue(state, t.Elem(), val))
+			mapVal.SetMapIndex(ReflectValue(state, t.Key(), key), ReflectValue(state, t.Elem(), val))
 		})
 		return mapVal
 	case reflect.Slice:
@@ -140,9 +148,9 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 				for _, item := range lvs {
 					switch t.Elem().Kind() {
 					case reflect.String, reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Bool:
-						slice = reflect.Append(slice, toReflectValue(state, t.Elem(), item.String()))
+						slice = reflect.Append(slice, ReflectValue(state, t.Elem(), item.String()))
 					default:
-						slice = reflect.Append(slice, toReflectValue(state, t.Elem(), item))
+						slice = reflect.Append(slice, ReflectValue(state, t.Elem(), item))
 					}
 				}
 				return slice
@@ -156,7 +164,7 @@ func toReflectValue(state *lua.LState, t reflect.Type, v any) reflect.Value {
 			if vh {
 				vv = tv
 			}
-			sliceVal = reflect.Append(sliceVal, toReflectValue(state, t.Elem(), vv))
+			sliceVal = reflect.Append(sliceVal, ReflectValue(state, t.Elem(), vv))
 		})
 		return sliceVal
 	default:

@@ -195,7 +195,7 @@ func refToTable(state *lua.LState, v any, filterNameMethods ...func(string) bool
 				p := mvt.In(j)
 				switch p.Kind() {
 				case reflect.Bool:
-					inParams = append(inParams, toReflectValue(state, p, state.ToBool(idx)))
+					inParams = append(inParams, ReflectValue(state, p, state.ToBool(idx)))
 				case reflect.String,
 					reflect.Int,
 					reflect.Int8,
@@ -209,9 +209,9 @@ func refToTable(state *lua.LState, v any, filterNameMethods ...func(string) bool
 					reflect.Uint64,
 					reflect.Float32,
 					reflect.Float64:
-					inParams = append(inParams, toReflectValue(state, p, state.ToString(idx)))
+					inParams = append(inParams, ReflectValue(state, p, state.ToString(idx)))
 				case reflect.Struct, reflect.Ptr, reflect.Map, reflect.Interface, reflect.Func:
-					inParams = append(inParams, toReflectValue(state, p, state.Get(idx)))
+					inParams = append(inParams, ReflectValue(state, p, state.Get(idx)))
 				case reflect.Slice:
 					//判断当前是否是最后一个入参,如果入参是最后一个,但是lua入参不是最后一个
 					if j == mvt.NumIn()-1 {
@@ -219,19 +219,19 @@ func refToTable(state *lua.LState, v any, filterNameMethods ...func(string) bool
 						if state.GetTop() == idx { //参数匹配,就一个参数
 							//判断是否是table,如果不是table则转换成数组
 							if _, h := state.Get(idx).(*lua.LTable); h {
-								inParams = append(inParams, toReflectValue(state, p, state.Get(idx)))
+								inParams = append(inParams, ReflectValue(state, p, state.Get(idx)))
 							} else {
-								inParams = append(inParams, toReflectValue(state, p, []lua.LValue{state.Get(idx)}))
+								inParams = append(inParams, ReflectValue(state, p, []lua.LValue{state.Get(idx)}))
 							}
 						} else {
 							values := make([]lua.LValue, 0, state.GetTop())
 							for x := idx; x <= state.GetTop(); x++ {
 								values = append(values, state.Get(x))
 							}
-							inParams = append(inParams, toReflectValue(state, p, values))
+							inParams = append(inParams, ReflectValue(state, p, values))
 						}
 					} else {
-						inParams = append(inParams, toReflectValue(state, p, state.Get(idx)))
+						inParams = append(inParams, ReflectValue(state, p, state.Get(idx)))
 					}
 				default:
 					inParams = append(inParams, reflect.New(p).Elem()) //创建默认值
@@ -245,7 +245,7 @@ func refToTable(state *lua.LState, v any, filterNameMethods ...func(string) bool
 					rets = append(rets, item.Interface())
 				}
 			}
-			return ret(state, rets...)
+			return Ret(state, rets...)
 		}))
 	}
 	return table
